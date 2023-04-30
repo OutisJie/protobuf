@@ -1,8 +1,5 @@
-import { defineComponent } from 'vue';
-import { withInstall } from './utils/withInstall';
-import MyButton from "./components/button.vue";
-
-export { MyButton }
+import { defineComponent } from "vue";
+import { withInstall } from "../utils/withInstall";
 
 export default withInstall(
   defineComponent({

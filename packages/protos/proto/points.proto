@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package bilibili;
+
+message PointCloud {
+  repeated Point points = 1;
+  int32 size = 2;
+}
+
+message Point {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+}

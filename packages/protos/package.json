@@ -1,0 +1,28 @@
+{
+  "name": "@pb/protos",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "nodemon --watch proto/ -e proto --exec yarn build",
+    "clean": "rm -rf src & rm -rf dist",
+    "prepare": "bash build.sh",
+    "build": "yarn prepare & vite build"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.2",
+    "vite-plugin-dts": "^2.3.0"
+  },
+  "dependencies": {
+    "protobufjs": "~6.11.3",
+    "protobufjs-cli": "~1.1.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  }
+}

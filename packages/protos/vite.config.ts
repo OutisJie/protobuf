@@ -1,17 +1,15 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
 import dts from 'vite-plugin-dts'
 
 import { fileURLToPath } from 'url'
 import { resolve } from 'pathe'
 
 export default defineConfig({
-  plugins: [vue(), vueJsx(), dts(),],
+  plugins: [dts({ copyDtsFiles: true })],
   build: {
     lib: {
-      name: 'form',
-      entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+      name: 'protos',
+      entry: fileURLToPath(new URL('./src/index.js', import.meta.url)),
       formats: ['es', 'cjs', 'iife'],
       fileName: (format) => {
         switch (format) {
@@ -34,21 +32,8 @@ export default defineConfig({
       external: ['vue'],
       output: {
         dir: 'dist',
-        exports: 'named',
-        globals: {
-          vue: 'Vue',
-        },
       },
     },
     minify: false,
-
-  },
-  resolve: {
-    alias: {
-      '/@': resolve(__dirname, './src'),
-    },
-  },
-  optimizeDeps: {
-    exclude: ['vue'],
   },
 })

@@ -1,11 +1,5 @@
 # `@protobuf/form`
 
-> TODO: description
+一个基于 protobuf 自动生成 form 的组件
 
 ## Usage
-
-```
-import form from '@protobuf/form';
-
-// TODO: DEMONSTRATE API
-```

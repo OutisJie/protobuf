@@ -1,5 +1,5 @@
 {
-  "name": "@protobuf/playground",
+  "name": "@pb/playground",
   "version": "0.0.0",
   "type": "module",
   "private": "true",
@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@protobuf/form": "^1.0.0",
-    "@protobuf/types": "^0.0.0",
+    "@pb/form": "^1.0.0",
+    "@pb/protos": "^1.0.0",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6"
   },

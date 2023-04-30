@@ -67,10 +67,6 @@ You define how you want your data to be structured once, then you can use specia
 
 ## 上手使用
 
-我这里并不会给大家讲 proto 语法、API 什么的，因为我讲的肯定不全，也不一定对。我就讲一些偏工程化的方案啥的。
-
-也建议别去找知乎、掘金啥的文章看，简单看了一圈无非就是把官网上的东西拿过来简单翻译一遍，望大家多去官网上看，都写得非常全。
-
 **通用工作流**：
 
 ![svg](./images/protoc.png)
@@ -84,26 +80,167 @@ You define how you want your data to be structured once, then you can use specia
 我这里就写一个超简单的例子：
 
 ```proto
-syntax = 'proto3'
+syntax = "proto3";
 
-package 'bilibili'
+package bilibili;
 
-Message Bilibili {
-    optional string department;
+message PointCloud {
+  repeated Point points = 1;
+  int32 size = 2;
+}
 
-    optional message Bussiness {
-
-    };
-
-    optional int32 num;
+message Point {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
 }
 ```
 
-### pbjs
+不难看出就是定义了一个点云数据结构。
 
-前面说到需要有编译工具，才能将 .proto 编译成其他语言。对于大多数语言，都是用 protoc 进行编译，而 js 不一样，js 需要用到 pbjs 的库。它全程叫 protobuf.js , 使用起来也非常方便
+### 第二步，编译
+
+前面说到需要有编译工具，才能将 .proto 编译成其他语言。对于大多数语言，都是用 protoc 进行编译，而 js 不太一样。
+
+这里需要说明的是，想要在项目中引用 proto，有两种方式：
+
+1. 一种是借助 protobufjs 库，直接在 js 代码中 load proto 文件；
+2. 一种是借助 protobufjs-cli，先将 proto 编译成 es6，再在 js 中引入【重点】
+
+**protobufjs**：
+
+protobufjs 是纯 js 实现，它支持 typescript。它的特点就是小并且速度快。
+
+这里借用一张官网的图：
+
+![img](./images/protobufjs.png)
+
+它的用法也比较简单，API 少但够用。这张图差不多把 protobufjs 的功能以及使用方式全都包括了。一个官网的例子基本就能介绍完：
+
+```ts
+import { load } from "protobufjs"; // respectively "./node_modules/protobufjs"
+
+load("points.proto", function(err, root) {
+    if (err)
+        throw err;
+
+    // 获取数据类
+    var PointCloud = root.lookupType("bilibili.PointCloud");
+
+    // 声明一个字面量对象
+    var payload = { points: [{ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }], size: 10 };
+
+    // 校验 payload 的准确性
+    var errMsg = PointCloud.verify(payload);
+    if (errMsg)
+        throw Error(errMsg);
+
+    // 根据字面量参数创建 message 对象
+    var message = PointCloud.create(payload); // or use .fromObject if conversion is necessary
+
+    // 编译成 Uint8Array (browser) or Buffer (node) 格式
+    var buffer = PointCloud.encode(message).finish();
+    // 可以导出 binary 文件，或者在 worker 线程之间传递数据，速度更快
+
+    // 从 Uint8Array (browser) or Buffer (node) 解码成数据类
+    var message = PointCloud.decode(buffer);
+    // 一个作用就是读取大型文件，文件 encode 成 binary 后，体积会变小很多
+
+    // 转成字面量对象
+    var object = PointCloud.toObject(message, {
+        longs: String,
+        enums: String,
+        bytes: String,
+        // see ConversionOptions
+    });
+});
+```
+
+除了这些功能外，还有 encodeDelimited、decodeDelimited、reflection、custom classes、grpc 等等，大家可以自行前往官网查看。 [protobufjs](https://protobufjs.github.io/protobuf.js/index.html)
+
+protobufjs 的 load 方式存在一些问题：
+
+1. 它一次只能 load 一份 proto，我有多个 proto 就需要 load 很多次
+
+2. load 虽然是异步的，但它 load 是需要花时间的，我并不想要这多余的开销
+
+3. 它需要绑定再项目 repo 中，不同项目不好实现复用 proto 定义
+
+4. 没有人喜欢写 callback 函数，万一我在某个 callback 里又去 load 一下，会很痛苦，又要考虑异步问题，又要考虑 this 指向问题
+
+**protobufjs-cli**：
+
+protbufjs-cli 是 protobufjs 的一个分支，所以他们的功能 api 啥的都是一样的，不同点是 protobufjs-cli 提供了命令行编译工具 ———— `pbjs` 和 `pbts`。它可以把 proto 先编译成静态的，再引入到项目中使用。
+
+#### 安装 pbjs、pbts
+
+```bash
+yarn add protobufjs@~6.11.3 
+yarn add protobufjs-cli@~1.1.1
+```
+
+> 这里限制 major 版本为6 的主要是因为官网有提示：
+>> Note that this library's versioning scheme is not semver-compatible for historical reasons. For guaranteed backward compatibility, always depend on ~6.A.B instead of ^6.A.B (hence the --save-prefix above).
+
+安装完了之后，能在 `node_modules/prorobufjs-cli/bin/` 目录下，看到 pbjs 和 pbts 两个文件
+
+#### 编译脚本
+
+编译工具特别简单，参数也不多。执行 `yarn pbjs` 命令行就会打印出 help 信息，也可以去看官方文档，当然，为了防止你看一半就跳走了，我把链接放在了文章末尾 (=_=)。
+
+简要参数说明：
+
+- -t,--target 目标格式，一共有 json、json-module、static、static-module、proto2、proto3，大家可以自己尝试一下，我试了下感觉就 static-module 看起来最顺眼（其实官网有说 static 或 static-module 的速度更快）
+- -w,--wrap 模块类型，就是我们熟悉的 es6、commonjs、amd 这些
+- -r,--root 指定 root 节点的名称，当你项目 app 中引入了两个 proto 库，它们 root 同名，app 最终打包的时候，可能会出现互相两个 proto 库互相覆盖的问题，所以 root 参数是很有用的
+- -o,--out 结果文件，注意一点，结果文件路径在前，原 proto 文件路径在后
+
+先准备 build.sh：
+
+```bash
+protos='proto/*.proto' # 所有 proto 文件的路径，如果你有多个分组，是支持空格拼接的
+target='src' # 编译生成文件的目标目录，为什么叫 src 后面会说
+
+rm -rf src # 清除历史结果
+mkdir src
+
+pbjs -t static-module -w es6 -r root -o $target/index.js $protos # 编译至 es6
+pbts -o $target/index.d.ts $target/index.js # 生成 d.ts 文件
+```
+
+然后修改 package.json
+
+```json
+{
+    "scripts": {
+        "build": "bash build.sh",
+    },
+}
+```
+
+#### 编译结果
 
 
+
+
+### 第三步，打包成 monorepo 库
+
+所以，为什么不先把 proto 编译成 js，然后再用 rollup 或者 vite 这种打包工具打包成一个 monorepo 的库，即可实现复用，还可以将整个 monorepo 的业务，通过数据类型定义来做一遍梳理整合。
+
+
+#### prepare
+
+我这里准备了一份 lerna monorepo，
+
+#### 安装
+
+```
+
+```
+
+#### 
+
+### 第三步，在 monorepo 
 
 ## 应用
 
@@ -125,4 +262,6 @@ Message Bilibili {
 
 [protobuf](https://protobuf.dev/)
 
-[protobufjs]()
+[protobufjs](https://protobufjs.github.io/protobuf.js/index.html)
+
+[protobufjs-cli](https://github.com/protobufjs/protobuf.js/blob/master/cli/README.md)
