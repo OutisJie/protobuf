@@ -1,4 +1,4 @@
-# `@protobuf/protos`
+# `@pb/protos`
 
 类型声明
 

@@ -11,6 +11,7 @@
   "dependencies": {
     "@pb/form": "^1.0.0",
     "@pb/protos": "^1.0.0",
+    "view-ui-plus": "^1.3.12",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6"
   },

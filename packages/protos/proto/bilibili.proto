@@ -16,8 +16,3 @@ message Backend {
   string work = 1;
   int32 people = 3;
 }
-
-
-
-
-
