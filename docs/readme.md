@@ -232,11 +232,22 @@ pbts -o $target/index.d.ts $target/index.js # 生成 d.ts 文件
 
 ![img](./images/protojs.png)
 
-js 文件就不截图给大家看了，一个图截不全，大家可以看我的源码，简单看下 d.ts 文件：
+文件内容就不截图给大家看了，大家可以看我的源码，可以看下 d.ts 文件，里面是非常标准的 ts 声明，层级关系也跟你 proto 中声明的关系一致，值得一提的是，生成的 ts 声明，是可以当作规范来看的，比如使用 null 而不是 undefined，所有 interface 都以 I 开头等等。
 
-![img](./images/protots.png)
+#### json-module 和 static-module 的区别：
 
-非常标准的 ts 声明，层级关系也跟你 proto 中声明的关系一致，值得一提的是，生成的 ts 声明，是可以当作规范来看的，比如使用 null 而不是 undefined，所有 interface 都以 I 开头等等。
+```ts
+const PointCloud = root.lookupType('bilibili.PointCloud')
+console.log('json-module class', PointCloud)
+console.log('json-module instance', PointCloud.create())
+
+console.log('static-module class', bilibili.PointCloud)
+console.log('static-module instance', bilibili.PointCloud.create())
+```
+
+![img](./images/static-json.png)
+
+可以看到 json-module 是完整的 class 类，而 static-module 仅是一个构造函数。json-module 创建的实例有完整的 typed 原型链，而 static-module 创建的实例就没有。
 
 ### 第三步，打包成 monorepo 库
 
@@ -536,18 +547,18 @@ router.post('/api', (req: any, res: any) => {
   })
   req.on('end', function () {
     // 二进制数据接收完
-    let buffer = bufferHelper.toBuffer();
+    let buffer = bufferHelper.toBuffer()
 
     console.log(buffer) // 这里已经就是二进制文件了
-    
+
     const parsedReq = bilibili.Request.decode(buffer)
     console.log('encode', parsedReq)
-    // 测试一下返回  
+    // 测试一下返回
     const encodedRes = bilibili.Response.encode({
       data: [{ id: 'test' }],
       status: 111111,
     }).finish()
-    // 修改 header 
+    // 修改 header
     res.set('Content-Type', 'application/octet-stream')
     res.send(encodedRes)
   })
@@ -573,11 +584,84 @@ playground 例子：
 
 ### 应用三： `grpc`
 
+grpc 可就非常有名了，相信大家或多或少听说过，它是由谷歌开源的一个高性能远程过程调用框架，打个比方，我有个 C++ 的算法模块，他有个 AI 程序，我可以通过 rpc， 在 js 里远程调用这个程序。我猜现在很多 chatGPT 的衍射，很可能都是用 rpc 来实现的。 grpc 的一个特征就是它使用 ProtoBuf。
+
+更多关于 grpc 的内容我就不在这里说了，篇幅就太长了，大家有兴趣可以自行了解。
+
 ### 应用四： `ProtoTxtFormat`
+
+这是我之前写的一个开源库，它的作用就是用 js 实现 prototxt 格式的数据跟 pb binary 的转换。要说它有什么作用呢：
+
+1. 要知道，有的语言它是不支持 json 的
+
+2. 以明文文件记录日志信息
+
+3. 一些程序以 txt 作为进程通信的手段
+
+4. 不知道大家是否有过 AI 开发的经验，有个叫 Caffe 的深度学习框架，就是用的 prototxt 作为网络模型的结构、参数的描述文件。
+
+我把代码重新 copy 了一份放在这次的源码里，并且重新用 vite 配置了打包，大家可以直接看源码，我就不贴出来了。
+
+#### `example`
+
+![img](./images/txt.png)
+
+这里我实现了 object -> txt，txt -> object 用 parse 函数就可以实现，大家有兴趣自行尝试。
+
+```ts
+import { root, bilibili } from '@pb/protos' // 注意这里必须使用 json-module
+import { encode, parse } from '@pb/txt-format' // 分别对应 decode 和 encode
+
+const PointCloud = root.lookupType('bilibili.PointCloud')
+
+const exportFile = () => {
+  const data: bilibili.IPointCloud = generateData()
+  const a = document.createElement('a')
+  // encode 接收的
+  let str = encode(PointCloud.fromObject(data), { indent: '  ' })
+
+  let url = `data:text/plain, ${str}`
+  let result = 'pointcloud.txt'
+  a.href = url
+  a.download = result
+  a.click()
+  URL.revokeObjectURL(url)
+}
+```
+
+导出结果：
+
+![img](./images/txt.png)
 
 ### 应用五： `ProtoForm`
 
+这部分内容还处在设想阶段，既然 ProtoBuf 非常是和作为描述文件，那么是否能开发一个 ProtoForm，它接受 proto 的定义，通过读取 typed field ，能自动的生成一个 form 表单。
+
+没错，就是有点像 `form-create`，它是一个基于 json 的 schema 库，功能强大，问题就是感觉它是一个无类型的 form，用起来总感觉差点意思，没法发挥出 ts 的优势。
+
+所以，有点想弄个真正的 typed schema form 出来，只需要定义 proto，就能生成一个 form，似乎很厉害的样子。
+
+设想如下：
+
+```tsx
+// 获取 proto 声明的 root
+const namespace = protobuf.Namespace.fromJson('', jsonDescriptor)
+
+// jsx
+<AutoForm
+    messageType="Article" // proto path，通过 lookupType 解析出类型
+    namespace={namespace} //
+    onSubmitValid={(result) => {
+        // handle result
+    }}
+>
+    <button>Submit</button>
+</AutoForm>
+```
+
 ## 结语
+
+ProtoBuf 真的非常好用。
 
 ## 参考链接
 
