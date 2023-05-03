@@ -3,14 +3,33 @@
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/both/index.js",
+  "module": "./dist/both/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/both/index.mjs",
+      "require": "./dist/both/index.cjs"
+    },
+    "./static": {
+      "types": "./dist/static/index.d.ts",
+      "import": "./dist/static/index.mjs",
+      "require": "./dist/static/index.cjs"
+    },
+    "./json": {
+      "types": "./dist/json/index.d.ts",
+      "import": "./dist/json/index.mjs",
+      "require": "./dist/json/index.cjs"
+    }
+  },
   "scripts": {
     "dev": "nodemon --watch proto/ -e proto --exec yarn build",
     "clean": "rm -rf src & rm -rf dist",
-    "prepare": "bash build.sh",
-    "build": "yarn prepare & vite build"
+    "prepare": "bash scripts/build.sh",
+    "build-static": "bash scripts/build_static.sh & vite build --config configs/vite.config.static.ts",
+    "build-json": "bash scripts/build_json.sh & vite build --config configs/vite.config.json.ts",
+    "build": "yarn prepare & vite build --config configs/vite.config.ts"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",
