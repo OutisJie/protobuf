@@ -1,0 +1,29 @@
+{
+  "name": "@pb/txt-format",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "storybook": "start-storybook -p 6006",
+    "build:storybook": "build-storybook"
+  },
+  "devDependencies": {
+    "@types/parsimmon": "^1.10.6",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.2",
+    "vite-plugin-dts": "^2.3.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "parsimmon": "^1.18.1",
+    "protobufjs": "~6.11.3"
+  },
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  }
+}
