@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { bilibili } from '@pb/protos'
+import { bilibili } from '@pb/protos/static' // 配置了 package.json 的 exports 字段，不太理解这里为啥报 lint 错误，有无大佬知道为什么
 import { Input, Button, Upload } from 'view-ui-plus'
 
 const length = ref<number>(1000000)

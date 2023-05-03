@@ -40,15 +40,15 @@ You define how you want your data to be structured once, then you can use specia
 
 2. **编译成特殊代码**：利用 protoc 编译工具，将 pb 文件编译成各种语言，举例：
 
-    1. C++：编译成 .pb.h 和 .pb.cc 文件
+   1. C++：编译成 .pb.h 和 .pb.cc 文件
 
-    2. Python：编译成 xxx_pb.py 文件
+   2. Python：编译成 xxx_pb.py 文件
 
-    3. 其它支持的语言：
+   3. 其它支持的语言：
 
-       ![img](./images/language.png)
+      ![img](./images/language.png)
 
-    4. Js：js 的编译工具叫 pbjs，是独立于 protoc 的存在，可以把 pb 编译成 js 或者 json，js 又分 commonjs 或者 es。但总之，就是编译成能被 js 程序引用的格式
+   4. Js：js 的编译工具叫 pbjs，是独立于 protoc 的存在，可以把 pb 编译成 js 或者 json，js 又分 commonjs 或者 es。但总之，就是编译成能被 js 程序引用的格式
 
 3. **各种数据流的读写**：protobuf 可以实现各种数据格式之间的转换，比如 xml、json、pb binary、txt 等格式的转换、读写，并且还提供了一些比如 create、verify、encode、decode 等 API。
 
@@ -57,10 +57,10 @@ You define how you want your data to be structured once, then you can use specia
 我们上官网看，会发现有两个版本，两个版本其实区别并不太大，3 主要是增加了一些语言的支持，改了一些约定。我之前一直用的 2，感觉也挺好用的，不过初次使用当然是推荐 3 了。
 
 1. proto3 更重约定而弱语法。比如：
-    1. 移除了 default 标记，2 的时候是可以指定标记 [default=XX]，3 去掉了这个东西，3 中所有默认值都由系统决定默认值，也就是约定好的。避免序列端和反序列端设置的 default 不一致
-    ![img](./images/default_value.png)
-    2. 枚举第一个 value 一定是 0
-    3. 移除了 required, 2 是分 optional 和 required，但其实 required 一直都是不推荐使用的。
+   1. 移除了 default 标记，2 的时候是可以指定标记 [default=XX]，3 去掉了这个东西，3 中所有默认值都由系统决定默认值，也就是约定好的。避免序列端和反序列端设置的 default 不一致
+      ![img](./images/default_value.png)
+   2. 枚举第一个 value 一定是 0
+   3. 移除了 required, 2 是分 optional 和 required，但其实 required 一直都是不推荐使用的。
 2. 增加了多种语言支持，Go、Ruby 等
 3. 支持 map，proto2 是不支持的，都是用 Message 嵌套实现，现在支持 map 会更方便
 4. 支持 json 映射，其实 pbjs 从 proto2 早就支持 json 的序列化了，我们前端开发并不需要太在意，只是其他语言如果想用 json 的话，就得用 proto3
@@ -118,69 +118,74 @@ protobufjs 是纯 js 实现，它支持 typescript。它的特点就是小并且
 它的用法也比较简单，API 少但够用。这张图差不多把 protobufjs 的功能以及使用方式全都包括了。一个官网的例子基本就能介绍完：
 
 ```ts
-import { load } from "protobufjs"; // respectively "./node_modules/protobufjs"
+import { load } from 'protobufjs' // respectively "./node_modules/protobufjs"
 
-load("points.proto", function(err, root) {
-    if (err)
-        throw err;
+load('points.proto', function (err, root) {
+  if (err) throw err
 
-    // 获取数据类
-    var PointCloud = root.lookupType("bilibili.PointCloud");
+  // 获取数据类
+  var PointCloud = root.lookupType('bilibili.PointCloud')
 
-    // 声明一个字面量对象
-    var payload = { points: [{ x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }], size: 10 };
+  // 声明一个字面量对象
+  var payload = {
+    points: [
+      { x: 0, y: 0, z: 0 },
+      { x: 1, y: 1, z: 1 },
+    ],
+    size: 10,
+  }
 
-    // 校验 payload 的准确性
-    var errMsg = PointCloud.verify(payload);
-    if (errMsg)
-        throw Error(errMsg);
+  // 校验 payload 的准确性
+  var errMsg = PointCloud.verify(payload)
+  if (errMsg) throw Error(errMsg)
 
-    // 根据字面量参数创建 message 对象
-    var message = PointCloud.create(payload); // or use .fromObject if conversion is necessary
+  // 根据字面量参数创建 message 对象
+  var message = PointCloud.create(payload) // or use .fromObject if conversion is necessary
 
-    // 编译成 Uint8Array (browser) or Buffer (node) 格式
-    var buffer = PointCloud.encode(message).finish();
-    // 可以导出 binary 文件，或者在 worker 线程之间传递数据，速度更快
+  // 编译成 Uint8Array (browser) or Buffer (node) 格式
+  var buffer = PointCloud.encode(message).finish()
+  // 可以导出 binary 文件，或者在 worker 线程之间传递数据，速度更快
 
-    // 从 Uint8Array (browser) or Buffer (node) 解码成数据类
-    var message = PointCloud.decode(buffer);
-    // 一个作用就是读取大型文件，文件 encode 成 binary 后，体积会变小很多
+  // 从 Uint8Array (browser) or Buffer (node) 解码成数据类
+  var message = PointCloud.decode(buffer)
+  // 一个作用就是读取大型文件，文件 encode 成 binary 后，体积会变小很多
 
-    // 转成字面量对象
-    var object = PointCloud.toObject(message, {
-        longs: String,
-        enums: String,
-        bytes: String,
-        // see ConversionOptions
-    });
-});
+  // 转成字面量对象
+  var object = PointCloud.toObject(message, {
+    longs: String,
+    enums: String,
+    bytes: String,
+    // see ConversionOptions
+  })
+})
 ```
 
 除了这些功能外，还有 encodeDelimited、decodeDelimited、reflection、custom classes、grpc 等等，大家可以自行前往官网查看。
 
 protobufjs 的 load 方式存在一些问题：
 
-1. 它一次只能 load 一份 proto，我有多个 proto 就需要 load 很多次
+1. 它一次只能 load 一份 proto 文件，多个 proto 需要 load 很多次，虽然可以先编译成一个 json 文件然后再 load，但这其实是下一节要说的内容了。
 
-2. load 虽然是异步的，但它 load 是需要花时间的，我并不想要这多余的开销
+2. load 是需要花时间的，我并不想要这多余的开销
 
-3. 它需要绑定再项目 repo 中，不同项目不好实现复用 proto 定义
+3. 它需要绑定在项目 repo 中，不同项目不好实现复用 proto 定义
 
 4. 没有人喜欢写 callback 函数，万一我在某个 callback 里又去 load 一下，会很痛苦，又要考虑异步问题，又要考虑 this 指向问题
 
 **`protobufjs-cli`**：
 
-protbufjs-cli 是 protobufjs 的一个分支，所以他们的功能 api 啥的都是一样的，不同点是 protobufjs-cli 提供了命令行编译工具 ———— `pbjs` 和 `pbts`。它可以把 proto 先编译成静态的，再引入到项目中使用。
+protbufjs-cli 是 protobufjs 提供的命令行编译工具 ———— `pbjs` 和 `pbts`。它可以把 proto 先编译成静态的，再引入到项目中使用。
 
 #### 安装 pbjs、pbts
 
 ```bash
-yarn add protobufjs@~6.11.3 
+yarn add protobufjs@~6.11.3
 yarn add protobufjs-cli@~1.1.1
 ```
 
-> 这里限制 major 版本为6 的主要是因为官网有提示：
->> Note that this library's versioning scheme is not semver-compatible for historical reasons. For guaranteed backward compatibility, always depend on ~6.A.B instead of ^6.A.B (hence the --save-prefix above).
+> 这里限制 major 版本为 6 的主要是因为官网有提示：
+>
+> > Note that this library's versioning scheme is not semver-compatible for historical reasons. For guaranteed backward compatibility, always depend on ~6.A.B instead of ^6.A.B (hence the --save-prefix above).
 
 安装完了之后，能在 `node_modules/prorobufjs-cli/bin/` 目录下，看到 pbjs 和 pbts 两个文件
 
@@ -188,23 +193,24 @@ yarn add protobufjs-cli@~1.1.1
 
 #### 编译脚本
 
-编译工具特别简单，参数也不多。执行 `yarn pbjs` 命令行就会打印出 help 信息，也可以去看官方文档，当然，为了防止你看一半就跳走了，我把链接放在了文章末尾 (=_=)。
+编译工具特别简单，参数也不多。执行 `yarn pbjs` 命令行就会打印出 help 信息，也可以去看官方文档，当然，为了防止你看一半就跳走了，我把链接放在了文章末尾 (=\_=)。
 
 简要参数说明：
 
-- -t,--target 目标格式，一共有 json、json-module、static、static-module、proto2、proto3，大家可以自己尝试一下，我试了下感觉就 static-module 看起来最顺眼（其实官网有说 static 或 static-module 的速度更快）
+- -t,--target 目标格式，一共有 json、json-module、static、static-module、proto2、proto3，大家可以自己尝试一下，大概就是 static 模式体积最小，但功能不全；json 模式体积大点，但功能全，比如 lookup、typed fields 是非常实用的功能。
 - -w,--wrap 模块类型，就是我们熟悉的 es6、commonjs、amd 这些
 - -r,--root 指定 root 节点的名称，当你项目 app 中引入了两个 proto 库，它们 root 同名，app 最终打包的时候，可能会出现互相两个 proto 库互相覆盖的问题，所以 root 参数是很有用的
 - -o,--out 结果文件，注意一点，结果文件路径在前，原 proto 文件路径在后
 
-先准备 build.sh：
+先准备 build.sh，我在源码中提供了 json、static、both 三种脚本，分别对应三种结果，大家可以自行看源码，我这里以 static 为例子：
 
 ```bash
+# build_static.sh
 protos='proto/*.proto' # 所有 proto 文件的路径，如果你有多个分组，是支持空格拼接的
-target='src' # 编译生成文件的目标目录，为什么叫 src 后面会说
+target='src/static' # 编译生成文件的目标目录，为什么叫 src 后面会说
 
-rm -rf src # 清除历史结果
-mkdir src
+rm -rf $target # 清除历史结果
+mkdir $target
 
 pbjs -t static-module -w es6 -r root -o $target/index.js $protos # 编译至 es6
 pbts -o $target/index.d.ts $target/index.js # 生成 d.ts 文件
@@ -214,9 +220,9 @@ pbts -o $target/index.d.ts $target/index.js # 生成 d.ts 文件
 
 ```json
 {
-    "scripts": {
-        "build": "bash build.sh",
-    },
+  "scripts": {
+    "build": "bash build_static.sh"
+  }
 }
 ```
 
@@ -235,32 +241,43 @@ js 文件就不截图给大家看了，一个图截不全，大家可以看我�
 ### 第三步，打包成 monorepo 库
 
 编译之后，就是考虑怎么引入到项目中了。毫无疑问，打包成 npm 包就是最好的选择，用 rollup 或者 vite 这种打包工具打包，再结合 monorepo 的工作流，即可实现复用，还可以将整个 monorepo 的业务，通过数据类型定义来做一遍梳理整合。
- 
+
 #### 准备工作
 
 我这里准备了一份 lerna monorepo，大家可以直接 clone 我的源码，因为是 demo，所以只弄了一些必要配置：vue、ts、ts、vite。结构如下：
 
 ```bash
-| protobuf
-| -- docs
-| -- packages
-| -- | -- playground # demo app
-| -- | -- protos # proto
-| -- | -- | -- proto # 存放所有 .proto 文件
-| -- | -- | -- | -- bilibili.proto
-| -- | -- | -- | -- points.proto
-| -- | -- | -- src # bash build.sh 的目标目录，之所以放到 src 就是为了 vite 进一步打包做准备
-| -- | -- | -- build.sh # 前面有贴代码
-| -- | -- | -- vite.config.ts # 打包工具配置，只需要把 es6 再编译一下，把 d.ts 拷贝一下
-| -- | -- | -- package.json # build script 会跟其他库有点不太一样
-| -- | -- form # 【WIP】基于 proto 开发的 schemaform 工具库
-| -- lerna.json
-| -- package.json    
+.
+├── docs
+│   └── readme.md # 文档
+├── lerna.json
+├── package.json
+├── packages
+│   ├── form # 【WIP】基于 proto 开发的 schemaform 工具库
+│   ├── playground # demo app
+│   └── protos  # proto lib
+│       └── configs  # 打包工具配置，只需要把 es6 再编译一下，把 d.ts 拷贝一下
+│           ├── vite.config.json.ts
+│           ├── vite.config.static.ts
+│           └── vite.config.ts
+│       ├── proto  # 存放所有 .proto 文件
+│           ├── api.proto
+│           ├── points.proto
+│           └── bilibili.proto
+│       ├── scripts # 前面有贴代码
+│           ├── build_json.sh
+│           ├── build_static.sh
+│           └── build.sh
+│       ├── src # bash build.sh 的目标目录，之所以放到 src 就是为了 vite 进一步打包做准备
+│       ├── package.json # build script 会跟其他库有点不太一样
+
 ```
 
 #### `Vite` 打包
 
-我之前一直用的是 webpack 和 rollup，vite 是第一次接触，想着学习一下，但看到官网说 vite 是基于 rollup 开发的，那就好办了，直接 rollup 老一套配置安排上：
+我之前一直用的是 webpack 和 rollup，vite 是第一次接触，想着学习一下，但看到官网说 vite 是基于 rollup 开发的，那就好办了，直接 rollup 老一套配置安排上。
+
+同 build 脚本一样，我的源码中也准备了三份 config 文件，分别将结果打包到 dist 的 static、json、both 目录下，这里以 static 为例子：
 
 ```js
 // 省略了一些内容，完整版在源码里
@@ -268,11 +285,11 @@ import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 
 export default defineConfig({
-  plugins: [dts({ copyDtsFiles: true })], // 拷贝 d.ts 到 dist 
+  plugins: [dts({ copyDtsFiles: true })], // 拷贝 d.ts 到 dist
   build: {
     lib: {
       name: 'protos', // cjs 和 iife 模式下，给目标文件命名
-      entry: fileURLToPath(new URL('./src/index.js', import.meta.url)), // 入口
+      entry: fileURLToPath(new URL('./src/static/index.js', import.meta.url)), // 入口
       formats: ['es', 'cjs', 'iife'], // 生成多种模块化版本供不同的程序引用
     },
     watch: {
@@ -280,7 +297,7 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        dir: 'dist', // 目标目录
+        dir: 'dist/static', // 目标目录
       },
     },
   },
@@ -298,12 +315,12 @@ yarn lerna add nodemon --dev --scope=@pb/protos
 ```json
 // package.json
 {
-    "scripts": {
-        "dev": "nodemon --watch proto/ -e proto --exec yarn build",
-        "clean": "rm -rf src & rm -rf dist",
-        "prepare": "bash build.sh",
-        "build": "yarn prepare & vite build"
-    },
+  "scripts": {
+    "dev": "nodemon --watch proto/ -e proto --exec yarn build",
+    "clean": "rm -rf src & rm -rf dist",
+    "prepare": "bash scripts/build.sh",
+    "build": "yarn prepare & vite build"
+  }
 }
 ```
 
@@ -319,9 +336,12 @@ yarn lerna add @pb/protos --scope=@pb/playground
 之后就可以在 playground 中 import:
 
 ```ts
-import root, { bilibili } from "@pb/protos";
+import root, { bilibili } from '@pb/protos'
 
-const pointsCloud: bilibili.IPointCloud = bilibili.PointCloud.create({ points: [], size: 10 })
+const pointsCloud: bilibili.IPointCloud = bilibili.PointCloud.create({
+  points: [],
+  size: 10,
+})
 ```
 
 再之后就是自由发挥想象力使用了。
@@ -345,56 +365,56 @@ protobuf 的应用非常多，我列几个：
 ```ts
 // 导出
 const exportFile = (type: 'json' | 'pb') => {
-  const data: bilibili.IPointCloud = generateData(); // 随机生成点云
+  const data: bilibili.IPointCloud = generateData() // 随机生成点云
 
-  const a = document.createElement('a'); // a 标签下载
+  const a = document.createElement('a') // a 标签下载
 
-  let url = '';
-  let result = '';
+  let url = ''
+  let result = ''
 
   if (type === 'pb') {
     // encode
-    const start = performance.now();
-    const encodedData = bilibili.PointCloud.encode(data).finish(); // 利用 protobuf 编译成 unit8Array, 关于 TypedArray 大家自行查阅吧. 需要知道的是 unit8Array\ArrayBuffer\Blob 是可以相互转换的
-    console.log("[cost encode]: pb,", (performance.now() - start) / 1000);
+    const start = performance.now()
+    const encodedData = bilibili.PointCloud.encode(data).finish() // 利用 protobuf 编译成 unit8Array, 关于 TypedArray 大家自行查阅吧. 需要知道的是 unit8Array\ArrayBuffer\Blob 是可以相互转换的
+    console.log('[cost encode]: pb,', (performance.now() - start) / 1000)
 
     const blob = new Blob([encodedData], { type: 'application/octet-stream' }) // unit8Array 转至 Blob
 
-    url = URL.createObjectURL(blob);
-    result = 'pointcloud.pb';
+    url = URL.createObjectURL(blob)
+    result = 'pointcloud.pb'
   } else {
-    const start = performance.now();
-    const jsonData = bilibili.PointCloud.fromObject(data).toJSON(); // 转换成 json 数据，看似有些多余，实则是为了测性能才这么写的。
-    console.log("[cost encode]: json,", (performance.now() - start) / 1000);
+    const start = performance.now()
+    const jsonData = bilibili.PointCloud.fromObject(data).toJSON() // 转换成 json 数据，看似有些多余，实则是为了测性能才这么写的。
+    console.log('[cost encode]: json,', (performance.now() - start) / 1000)
 
     url = `data:text/plain, ${JSON.stringify(jsonData)}`
-    result = 'pointcloud.json';
+    result = 'pointcloud.json'
   }
 
-  a.href = url;
-  a.download = result;
+  a.href = url
+  a.download = result
   a.click()
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(url)
 }
 
 // 导入
 const uploadFile = (file: File) => {
-  const reader = new FileReader();
-  const start = performance.now();
+  const reader = new FileReader()
+  const start = performance.now()
 
   reader.onload = (event: any) => {
-    const row = event.target.result;
+    const row = event.target.result
 
     if (typeof row === 'string') {
-      const data = bilibili.PointCloud.fromObject(JSON.parse(row)); // 解析 json string
-      console.log("[cost decode]:  json ,", (performance.now() - start) / 1000);
+      const data = bilibili.PointCloud.fromObject(JSON.parse(row)) // 解析 json string
+      console.log('[cost decode]:  json ,', (performance.now() - start) / 1000)
     } else {
-      const unitArray = new Uint8Array(row); // ArrayBuffer 转 unit8Array
+      const unitArray = new Uint8Array(row) // ArrayBuffer 转 unit8Array
       const data = bilibili.PointCloud.decode(unitArray) // decode 成 js 对象
-      console.log("[cost decode]:  pb ,", (performance.now() - start) / 1000);
+      console.log('[cost decode]:  pb ,', (performance.now() - start) / 1000)
     }
   }
-  if (file.name.includes("json")) {
+  if (file.name.includes('json')) {
     reader.readAsText(file)
   } else {
     reader.readAsArrayBuffer(file) // 二进制文件读取，读出来之后是 ArrayBuffer 格式
@@ -432,6 +452,8 @@ protoubuf 一大优势就是跨语言，这意味着前端后端都可以用。�
 
 ![img](./images/request1.png)
 
+最重要的一点是它数据小，比 json 要小 3 倍多，特别是对于大数据传输，对于性能优化是很不错的手段。
+
 #### 定义接口
 
 ```proto
@@ -450,9 +472,104 @@ message Response {
 }
 ```
 
-#### 压缩传输
+#### 前端请求
 
+```ts
+// 统一处理，将数据进行压缩，传递 arraybuffer
 
+const httpService = axios.create({
+  baseURL: 'http://localhost:3001', // 测试用后端地址
+  timeout: 10000, // 我们内网 nginx 的超时设置就是 10s
+  method: 'post',
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest',
+    'Content-Type': 'application/octet-stream', // 我们传输的是 proto encode 过的二进制数据
+  },
+  responseType: 'arraybuffer', // 接受到的也是后端用 proto encode 过的二进制数据
+})
+
+function request<T>(
+  params: T,
+  reqClazz: { encode: (message: T) => Writer },
+  resClazz: { decode(v: Uint8Array): any } // 用 any 投个懒
+) {
+  return httpService
+    .post('api', params, {
+      transformRequest: (v) => {
+        // encode 请求
+        const ab = reqClazz.encode({ ...v }).finish()
+        return ab
+      },
+      transformResponse: (v) => {
+        // decode 返回
+        const buf = new Uint8Array(v)
+        return resClazz.decode(buf)
+      },
+    })
+    .then
+    // 处理请求
+    ()
+}
+export { request }
+```
+
+```ts
+// 使用
+const params: bilibili.IRequest = {
+  page: 1,
+  size: 15,
+}
+request(params, bilibili.Request, bilibili.Response)
+```
+
+#### 后端接口
+
+我用 express 简单搭了个后端，上代码：
+
+```ts
+// any 是偷懒行为，大家不要学
+router.post('/api', (req: any, res: any) => {
+  let bufferHelper = new BufferHelper()
+  req.on('data', function (chunk: any) {
+    // 接受二进制数据
+    bufferHelper.concat(chunk)
+  })
+  req.on('end', function () {
+    // 二进制数据接收完
+    let buffer = bufferHelper.toBuffer();
+
+    console.log(buffer) // 这里已经就是二进制文件了
+    
+    const parsedReq = bilibili.Request.decode(buffer)
+    console.log('encode', parsedReq)
+    // 测试一下返回  
+    const encodedRes = bilibili.Response.encode({
+      data: [{ id: 'test' }],
+      status: 111111,
+    }).finish()
+    // 修改 header 
+    res.set('Content-Type', 'application/octet-stream')
+    res.send(encodedRes)
+  })
+})
+```
+
+#### 看看效果
+
+playground 例子：
+![img](./images/request2.png)
+
+发起请求：
+
+![img](./images/request3.png)
+
+后端接受到请求数据：
+
+![img](./images/request4.png)
+
+前端接受后端返回：
+
+![img](./images/request5.png)
 
 ### 应用三： `grpc`
 
@@ -461,7 +578,6 @@ message Response {
 ### 应用五： `ProtoForm`
 
 ## 结语
-
 
 ## 参考链接
 
