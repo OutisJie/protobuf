@@ -485,6 +485,8 @@ message Response {
 
 #### 前端请求
 
+主要想法是通过一个 request 入口统一处理请求，该函数接受 object 类型，在函数内部将数据转换为 pb 二进制格式，并发出请求。同时，该函数接受后端传回的 pb 二进制，统一转成 object 对象再 return 出来
+
 ```ts
 // 统一处理，将数据进行压缩，传递 arraybuffer
 
@@ -524,6 +526,8 @@ function request<T>(
 export { request }
 ```
 
+在需要发出请求的地方调用：
+
 ```ts
 // 使用
 const params: bilibili.IRequest = {
@@ -535,7 +539,7 @@ request(params, bilibili.Request, bilibili.Response)
 
 #### 后端接口
 
-我用 express 简单搭了个后端，上代码：
+我用 express 简单搭了个后端，和前端一样，它也是使用我们编译好的 proto ，在接口处对 pb 二进制数据进行转码，上代码：
 
 ```ts
 // any 是偷懒行为，大家不要学
@@ -571,6 +575,7 @@ playground 例子：
 ![img](./images/request2.png)
 
 发起请求：
+可以看到 Content-Type 是二进制流格式，传输 arraybuffer，当然，数据是非明文的。
 
 ![img](./images/request3.png)
 
@@ -631,7 +636,7 @@ const exportFile = () => {
 
 导出结果：
 
-![img](./images/txt.png)
+![img](./images/txt2.png)
 
 ### 应用五： `ProtoForm`
 
